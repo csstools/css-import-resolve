@@ -1,104 +1,121 @@
-import path from 'path';
-import fse from 'fse';
+import { readFile } from 'fs';
+import { join, sep } from 'path';
 
-export default function resolve(id, rawcwd) {
-	// set cwd as the current working directory
-	let cwd = rawcwd;
+/* Resolve the location of a file within `url(id)` from `cwd`
+/* ========================================================================== */
 
-	// if id begins with /
-	if (id[0] === '/') {
-		// set cwd as the filesystem root
+export default function resolve(id, cwd, cache) {
+	cache = cache || {};
+
+	// if `id` starts with `/`
+	if (starts_with_root(id)) {
+		// `cwd` is the filesystem root
 		cwd = '';
 	}
 
-	// resolve load_as_file(cwd/id)
-	return load_as_file(path.join(cwd, id)).catch(
-		// otherwise, resolve load_as_directory(cwd/id)
-		() => load_as_directory(path.join(cwd, id))
-	).catch(
-		() => load_node_modules(id, path.dirname(cwd))
-	).catch(
-		() => Promise.reject('CSS Module not found')
+	// resolve as a file using `cwd/id` as `file`
+	return resolve_as_file(join(cwd, id), cache)
+	// otherwise, resolve as a directory using `cwd/id` as `dir`
+	.catch(() => resolve_as_directory(join(cwd, id), cache))
+	// otherwise, if `id` does not begin with `/`, `./`, or `../`
+	.catch(() => !starts_with_relative(id)
+		// resolve as a module using `cwd` and `id`
+		? resolve_as_module(cwd, id, cache)
+		: Promise.reject()
+	)
+	// otherwise, throw `"CSS Module not found"`
+	.catch(() => Promise.reject(new Error('CSS Module not found')));
+}
+
+function resolve_as_file(file, cache) {
+	// resolve `file` as the file
+	return file_contents(file, cache)
+	// otherwise, resolve `file.css` as the file
+	.catch(() => file_contents(`${file}.css`, cache));
+}
+
+function resolve_as_directory(dir, cache) {
+	// resolve the JSON contents of `dir/package.json` as `pkg`
+	return json_contents(dir, cache).then(
+		// if `pkg` has a `style` field
+		pkg => 'media' in pkg
+			// resolve `dir/pkg.style` as the file
+			? file_contents(join(dir, pkg.media), cache)
+		// otherwise, resolve `dir/index.css` as the file
+		: file_contents(join(dir, 'index.css'), cache)
 	);
 }
 
-function load_as_file(id) {
-	// resolve if id is a file
-	return is_file(id).catch(
-		// otherwise, resolve if id.css is a file
-		() => is_file(`${id}.css`)
-	);
-}
-
-function load_as_directory(id) {
-	// if id/package.json is a file
-	return is_file(path.join(id, 'package.json')).then(
-		// parse id/package.json as pkg
-		() => fse.readFile(path.join(id, 'package.json')).then(
-			(json) => JSON.parse(json)
-		)
-	).then(
-		// if style field exists in pkg
-		(pkg) => 'style' in pkg
-			// resolve load_as_file(id/pkg.style)
-			? load_as_file(path.join(id, pkg.style))
-		// otherwise, resolve load_index(id)
-		: load_index(id)
-	);
-}
-
-function load_node_modules(id, start) {
-	return node_modules_paths(start).reduce(
-		// for each dir in node_modules_paths(start):
+function resolve_as_module(cwd, id, cache) {
+	// for each `dir` in the node modules directory using `cwd`
+	return node_modules_dirs(cwd).reduce(
 		(promise, dir) => promise.catch(
-			// resolve load_as_file(dir/id)
-			() => load_as_file(path.join(dir, id)).catch(
-				// resolve load_as_directory(dir/id)
-				() => load_as_directory(path.join(dir, id))
-			)
+			// resolve as a file using `dir/id` as `file`
+			() => resolve_as_file(join(dir, id), cache)
+			// otherwise, resolve as a directory using `dir/id` as `dir`
+			.catch(() => resolve_as_directory(join(dir, id), cache))
 		),
 		Promise.reject()
 	);
 }
 
-function node_modules_paths(start) {
-	// set parts as the split paths of start
-	const parts = start.split(path.sep);
+function node_modules_dirs(cwd) {
+	// segments is `cwd` split by `/`
+	const segments = cwd.split(sep);
 
-	// set i as the count of parts
-	let i = parts.length;
+	// `count` is the length of segments
+	let count = segments.length;
 
-	// set dirs as empty array
+	// `dirs` is an empty list
 	const dirs = [];
 
-	// while i >= 0
-	while (i > 0) {
-		// if parts i is node_modules
-		if (parts[i] === 'node_modules') {
-			// continue
-			continue;
+	// while `count` is greater than `0`
+	while (count > 0) {
+		// if `segments[count]` is not `node_modules`
+		if (segments[count] !== 'node_modules') {
+			// push a new path to `dirs` as the `/`-joined `segments[0 - count]` and `node_modules`
+			dirs.push(
+				join(segments.slice(0, count).join('/') || '/', 'node_modules')
+			);
 		}
 
-		// push joined paths of parts 0 through i and node_modules to dirs
-		dirs.push(
-			path.join(...parts.slice(0, i), 'node_modules')
-		);
-
-		// set i as i minus 1
-		--i;
+		// `count` is `count` minus `1`
+		--count;
 	}
 
-	// return dirs
+	// return `dirs`
 	return dirs;
 }
 
-function load_index(id) {
-	// resolve if id/index.css is a file
-	return is_file(path.join(id, 'index.css'));
+/* Additional tooling
+/* ========================================================================== */
+
+function file_contents(file, cache) {
+	cache[file] = cache[file] || new Promise(
+		(resolvePromise, rejectPromise) => readFile(file, 'utf8', (error, contents) => error
+			? rejectPromise(error)
+			: resolvePromise({
+				file,
+				contents
+			})
+		)
+	);
+
+	return cache[file];
 }
 
-function is_file(id) {
-	return fse.lstat(id).then(
-		(stat) => stat.isFile() ? Promise.resolve(id) : Promise.reject()
+function json_contents(dir, cache) {
+	const file = join(dir, 'package.json');
+
+	return file_contents(file, cache).then(
+		({ contents }) => JSON.parse(contents)
 	);
+}
+
+function starts_with_root(id) {
+	return /^\//.test(id);
+}
+
+function starts_with_relative(id) {
+	return /^\.{0,2}\//.test(id);
 }
