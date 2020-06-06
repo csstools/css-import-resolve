@@ -1,16 +1,16 @@
-import { readFile } from 'fs';
-import { join, sep } from 'path';
+import { readFile } from 'fs'
+import { join, sep } from 'path'
 
 /* Resolve the location of a file within `url(id)` from `cwd`
 /* ========================================================================== */
 
 export default function resolve(id, cwd, cache) {
-	cache = cache || {};
+	cache = cache || {}
 
 	// if `id` starts with `/`
 	if (starts_with_root(id)) {
 		// `cwd` is the filesystem root
-		cwd = '';
+		cwd = ''
 	}
 
 	// resolve as a file using `cwd/id` as `file`
@@ -24,14 +24,14 @@ export default function resolve(id, cwd, cache) {
 		: Promise.reject()
 	)
 	// otherwise, throw `"CSS Module not found"`
-	.catch(() => Promise.reject(new Error('CSS Module not found')));
+	.catch(() => Promise.reject(new Error('CSS Module not found')))
 }
 
 function resolve_as_file(file, cache) {
 	// resolve `file` as the file
 	return file_contents(file, cache)
 	// otherwise, resolve `file.css` as the file
-	.catch(() => file_contents(`${file}.css`, cache));
+	.catch(() => file_contents(`${file}.css`, cache))
 }
 
 function resolve_as_directory(dir, cache) {
@@ -43,7 +43,7 @@ function resolve_as_directory(dir, cache) {
 			? file_contents(join(dir, pkg.style), cache)
 		// otherwise, resolve `dir/index.css` as the file
 		: file_contents(join(dir, 'index.css'), cache)
-	);
+	)
 }
 
 function resolve_as_module(cwd, id, cache) {
@@ -56,18 +56,18 @@ function resolve_as_module(cwd, id, cache) {
 			.catch(() => resolve_as_directory(join(dir, id), cache))
 		),
 		Promise.reject()
-	);
+	)
 }
 
 function node_modules_dirs(cwd) {
 	// segments is `cwd` split by `/`
-	const segments = cwd.split(sep);
+	const segments = cwd.split(sep)
 
 	// `count` is the length of segments
-	let count = segments.length;
+	let count = segments.length
 
 	// `dirs` is an empty list
-	const dirs = [];
+	const dirs = []
 
 	// while `count` is greater than `0`
 	while (count > 0) {
@@ -76,15 +76,15 @@ function node_modules_dirs(cwd) {
 			// push a new path to `dirs` as the `/`-joined `segments[0 - count]` and `node_modules`
 			dirs.push(
 				join(segments.slice(0, count).join('/') || '/', 'node_modules')
-			);
+			)
 		}
 
 		// `count` is `count` minus `1`
-		--count;
+		--count
 	}
 
 	// return `dirs`
-	return dirs;
+	return dirs
 }
 
 /* Additional tooling
@@ -99,23 +99,23 @@ function file_contents(file, cache) {
 				contents
 			})
 		)
-	);
+	)
 
-	return cache[file];
+	return cache[file]
 }
 
 function json_contents(dir, cache) {
-	const file = join(dir, 'package.json');
+	const file = join(dir, 'package.json')
 
 	return file_contents(file, cache).then(
 		({ contents }) => JSON.parse(contents)
-	);
+	)
 }
 
 function starts_with_root(id) {
-	return /^\//.test(id);
+	return /^\//.test(id)
 }
 
 function starts_with_relative(id) {
-	return /^\.{0,2}\//.test(id);
+	return /^\.{0,2}\//.test(id)
 }
