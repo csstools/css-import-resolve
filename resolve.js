@@ -1,65 +1,67 @@
 import { readFile } from 'fs'
 import { join, sep } from 'path'
 
+export default resolve
+
 /* Resolve the location of a file within `url(id)` from `cwd`
 /* ========================================================================== */
 
-export default function resolve(id, cwd, cache) {
+function resolve(id, cwd, cache) {
 	cache = cache || {}
 
 	// if `id` starts with `/`
-	if (starts_with_root(id)) {
+	if (startsWithRoot(id)) {
 		// `cwd` is the filesystem root
 		cwd = ''
 	}
 
 	// resolve as a file using `cwd/id` as `file`
-	return resolve_as_file(join(cwd, id), cache)
+	return resolveAsFile(join(cwd, id), cache)
 	// otherwise, resolve as a directory using `cwd/id` as `dir`
-	.catch(() => resolve_as_directory(join(cwd, id), cache))
+	.catch(() => resolveAsDirectory(join(cwd, id), cache))
 	// otherwise, if `id` does not begin with `/`, `./`, or `../`
-	.catch(() => !starts_with_relative(id)
+	.catch(() => !startsWithRelative(id)
 		// resolve as a module using `cwd` and `id`
-		? resolve_as_module(cwd, id, cache)
+		? resolveAsModule(cwd, id, cache)
 		: Promise.reject()
 	)
 	// otherwise, throw `"CSS Module not found"`
 	.catch(() => Promise.reject(new Error('CSS Module not found')))
 }
 
-function resolve_as_file(file, cache) {
+function resolveAsFile(file, cache) {
 	// resolve `file` as the file
-	return file_contents(file, cache)
+	return fileContents(file, cache)
 	// otherwise, resolve `file.css` as the file
-	.catch(() => file_contents(`${file}.css`, cache))
+	.catch(() => fileContents(`${file}.css`, cache))
 }
 
-function resolve_as_directory(dir, cache) {
+function resolveAsDirectory(dir, cache) {
 	// resolve the JSON contents of `dir/package.json` as `pkg`
-	return json_contents(dir, cache).then(
+	return jsonContents(dir, cache).then(
 		// if `pkg` has a `style` field
 		pkg => 'style' in pkg
 			// resolve `dir/pkg.style` as the file
-			? file_contents(join(dir, pkg.style), cache)
+			? fileContents(join(dir, pkg.style), cache)
 		// otherwise, resolve `dir/index.css` as the file
-		: file_contents(join(dir, 'index.css'), cache)
+		: fileContents(join(dir, 'index.css'), cache)
 	)
 }
 
-function resolve_as_module(cwd, id, cache) {
+function resolveAsModule(cwd, id, cache) {
 	// for each `dir` in the node modules directory using `cwd`
-	return node_modules_dirs(cwd).reduce(
+	return nodeModulesDirs(cwd).reduce(
 		(promise, dir) => promise.catch(
 			// resolve as a file using `dir/id` as `file`
-			() => resolve_as_file(join(dir, id), cache)
+			() => resolveAsFile(join(dir, id), cache)
 			// otherwise, resolve as a directory using `dir/id` as `dir`
-			.catch(() => resolve_as_directory(join(dir, id), cache))
+			.catch(() => resolveAsDirectory(join(dir, id), cache))
 		),
 		Promise.reject()
 	)
 }
 
-function node_modules_dirs(cwd) {
+function nodeModulesDirs(cwd) {
 	// segments is `cwd` split by `/`
 	const segments = cwd.split(sep)
 
@@ -90,7 +92,7 @@ function node_modules_dirs(cwd) {
 /* Additional tooling
 /* ========================================================================== */
 
-function file_contents(file, cache) {
+function fileContents(file, cache) {
 	cache[file] = cache[file] || new Promise(
 		(resolvePromise, rejectPromise) => readFile(file, 'utf8', (error, contents) => error
 			? rejectPromise(error)
@@ -104,18 +106,18 @@ function file_contents(file, cache) {
 	return cache[file]
 }
 
-function json_contents(dir, cache) {
+function jsonContents(dir, cache) {
 	const file = join(dir, 'package.json')
 
-	return file_contents(file, cache).then(
+	return fileContents(file, cache).then(
 		({ contents }) => JSON.parse(contents)
 	)
 }
 
-function starts_with_root(id) {
+function startsWithRoot(id) {
 	return /^\//.test(id)
 }
 
-function starts_with_relative(id) {
+function startsWithRelative(id) {
 	return /^\.{0,2}\//.test(id)
 }
