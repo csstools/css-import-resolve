@@ -38,9 +38,9 @@ function resolve_as_directory(dir, cache) {
 	// resolve the JSON contents of `dir/package.json` as `pkg`
 	return json_contents(dir, cache).then(
 		// if `pkg` has a `style` field
-		pkg => 'media' in pkg
+		pkg => 'style' in pkg
 			// resolve `dir/pkg.style` as the file
-			? file_contents(join(dir, pkg.media), cache)
+			? file_contents(join(dir, pkg.style), cache)
 		// otherwise, resolve `dir/index.css` as the file
 		: file_contents(join(dir, 'index.css'), cache)
 	);
