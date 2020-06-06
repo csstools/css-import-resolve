@@ -1,9 +1,8 @@
-# CSS Import Resolve [<img src="https://jonathantneal.github.io/css-import-resolve/css-logo.svg" alt="CSS Logo" width="90" height="90" align="right">][CSS Import Resolve]
+# CSS Import Resolve [<img src="https://jonneal.dev/css-logo.svg" alt="CSS Logo" width="90" height="90" align="right">][CSS Import Resolve]
 
-[![NPM Version][npm-img]][npm-url]
-[![Linux Build Status][cli-img]][cli-url]
-[![Windows Build Status][win-img]][win-url]
-[![Gitter Chat][git-img]][git-url]
+[<img alt="NPM Version" src="https://img.shields.io/npm/v/css-import-resolve.svg" height="20">][npm-url]
+[<img alt="Build Status" src="https://img.shields.io/travis/csstools/css-import-resolve/master.svg" height="20">][cli-url]
+[<img alt="Support Chat" src="https://img.shields.io/badge/chat-gitter-blue.svg" height="20">][git-url]
 
 [CSS Import Resolve] is an algorithm for resolving imports in CSS.
 
@@ -14,11 +13,11 @@ npm install css-import-resolve
 ```
 
 ```js
-import resolve from 'css-import-resolve';
+import resolve from 'css-import-resolve'
 
 // where `id` is location stylesheet you are resolving, and
 // where `cwd` is the current working directory
-resolve(id, process.cwd());
+resolve(id, process.cwd())
 ```
 
 ## Resolve Algorithm
@@ -70,11 +69,6 @@ the location of the CSS file, found within `url(id)` from `cwd`:
 [CSS Import Resolve]: https://jonathantneal.github.io/css-import-resolve/
 [CSS Import Resolve specification]: https://jonathantneal.github.io/css-import-resolve/
 
-[cli-url]: https://travis-ci.org/jonathantneal/css-import-resolve
-[cli-img]: https://img.shields.io/travis/jonathantneal/css-import-resolve.svg
+[cli-url]: https://travis-ci.org/csstools/css-import-resolve
 [git-url]: https://gitter.im/postcss/postcss
-[git-img]: https://img.shields.io/badge/chat-gitter-blue.svg
 [npm-url]: https://www.npmjs.com/package/css-import-resolve
-[npm-img]: https://img.shields.io/npm/v/css-import-resolve.svg
-[win-url]: https://ci.appveyor.com/project/jonathantneal/css-import-resolve
-[win-img]: https://img.shields.io/appveyor/ci/jonathantneal/css-import-resolve.svg

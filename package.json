@@ -4,9 +4,9 @@
   "description": "An algorithm for resolving imports in CSS",
   "author": "Jonathan Neal <jonathantneal@hotmail.com>",
   "license": "CC0-1.0",
-  "repository": "jonathantneal/css-import-resolve",
-  "homepage": "https://github.com/jonathantneal/css-import-resolve#readme",
-  "bugs": "https://github.com/jonathantneal/css-import-resolve/issues",
+  "repository": "csstools/css-import-resolve",
+  "homepage": "https://github.com/csstools/css-import-resolve#readme",
+  "bugs": "https://github.com/csstools/css-import-resolve/issues",
   "main": "resolve.dist.js",
   "module": "resolve.js",
   "files": [
@@ -20,7 +20,7 @@
     "test:tape": "node .tape"
   },
   "engines": {
-    "node": ">=4.0.0"
+    "node": ">=10.0.0"
   },
   "devDependencies": {
     "babel-cli": "^6.26.0",
