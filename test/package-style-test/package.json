@@ -1,0 +1,6 @@
+{
+  "exports": {
+    "icss": "../pass.module.css"
+  },
+  "style": "../pass.css"
+}

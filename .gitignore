@@ -1,9 +1,11 @@
+dist
 node_modules
 package-lock.json
+*.log*
+*.result.css
 .*
 !.editorconfig
+!.gitattributes
 !.gitignore
-!.tape.js
+!.rollup.js
 !.travis.yml
-*.log*
-resolve.dist.js

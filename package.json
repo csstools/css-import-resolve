@@ -7,34 +7,92 @@
   "repository": "csstools/css-import-resolve",
   "homepage": "https://github.com/csstools/css-import-resolve#readme",
   "bugs": "https://github.com/csstools/css-import-resolve/issues",
-  "main": "resolve.dist.js",
-  "module": "resolve.js",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "exports": {
+    "import": "./dist/index.mjs",
+    "require": "./dist/index.cjs"
+  },
+  "type": "module",
+  "types": "types.d.ts",
   "files": [
-    "resolve.js",
-    "resolve.dist.js"
+    "dist",
+    "types.d.ts"
   ],
   "scripts": {
-    "start": "babel resolve.js --presets=@babel/env --plugins=add-module-exports --out-file resolve.dist.js",
-    "test": "npm start && npm run test:lint && npm run test:tape",
-    "test:lint": "eslint resolve.js --cache --ignore-pattern .gitignore",
-    "test:tape": "node .tape"
+    "build": "npx rollup -c .rollup.js",
+    "build:watch": "npx rollup -c .rollup.js --watch",
+    "lint": "npx eslint --cache src",
+    "lint:fix": "npx eslint --cache --fix",
+    "pretest": "npm run build",
+    "test": "npm run lint && npm run tape",
+    "tape": "node test.cjs"
   },
   "engines": {
     "node": ">=10.0.0"
   },
   "devDependencies": {
-    "@babel/cli": "^7.0.0",
-    "@babel/core": "^7.0.0",
-    "@babel/preset-env": "^7.0.0",
+    "@babel/cli": "^7.10.1",
+    "@babel/core": "^7.10.2",
+    "@babel/preset-env": "^7.10.2",
     "babel-plugin-add-module-exports": "^1.0.2",
     "eslint": "^7.2.0",
-    "eslint-config-dev": "^2.0.0"
+    "rollup": "^2.13.1",
+    "rollup-plugin-babel": "^4.4.0"
+  },
+  "babel": {
+    "presets": [
+      [
+        "@babel/env",
+        {
+          "targets": "maintained node versions"
+        }
+      ]
+    ]
   },
   "eslintConfig": {
-    "extends": "dev",
-    "rules": {
-      "no-param-reassign": 0
+    "env": {
+      "es6": true,
+      "node": true
+    },
+    "extends": "eslint:recommended",
+    "parserOptions": {
+      "sourceType": "module"
     }
+  },
+  "prettier": {
+    "arrowParens": "avoid",
+    "endOfLine": "lf",
+    "printWidth": 120,
+    "semi": false,
+    "singleQuote": true,
+    "useTabs": true,
+    "overrides": [
+      {
+        "files": "*.{json,md,yml}",
+        "options": {
+          "useTabs": false
+        }
+      }
+    ]
+  },
+  "rollup": {
+    "input": "src/index.js",
+    "plugins": [
+      "rollup-plugin-babel"
+    ],
+    "output": [
+      {
+        "file": "dist/index.cjs",
+        "format": "cjs",
+        "strict": false
+      },
+      {
+        "file": "dist/index.mjs",
+        "format": "esm",
+        "strict": false
+      }
+    ]
   },
   "keywords": [
     "css",
