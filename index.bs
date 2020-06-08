@@ -1,0 +1,125 @@
+<pre class='metadata'>
+Title: CSS Import Resolve
+Shortname: css-import-resolve
+Level: 1
+Status: DREAM
+URL: https://csstools.github.io/css-import-resolve/
+Editor: Jonathan Neal, jonathantneal@hotmail.com
+Abstract: The goal of this document is to specify an algorithm for resolving
+			 imports in CSS.
+</pre>
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:site" content="@jon_neal">
+<meta name="twitter:title" content="CSS Import Resolve">
+<meta name="twitter:description" content="An algorithm for resolving imports in CSS">
+<meta name="twitter:image" content="https://csstools.github.io/css-import-resolve/card.jpg">
+<meta property="og:image" content="https://csstools.github.io/css-import-resolve/card.jpg" itemprop="thumbnailUrl">
+<meta property="og:title" content="CSS Import Resolve">
+<meta property="og:url" content="https://csstools.github.io/css-import-resolve/">
+<meta property="og:site_name" content="GitHub">
+<meta property="og:description" content="An algorithm for resolving imports in CSS">
+<link href="css-logo.ico" rel="shortcut icon" type="image/x-icon">
+
+<h2 id=introduction>
+Introduction</h2>
+
+The purpose of this document is to specify an algorithm for resolving the
+location of external style sheets included by the ''@import'' rule in CSS
+tooling. It is written for developers and implementors looking for formal
+guidance, and should match existing implementions.
+
+<h3 id=at-import>
+The ''@import'' rule</h3>
+
+The ''@import'' rule allows users to import style rules from other style sheets.
+If an ''@import'' rule refers to a valid stylesheet, user agents must treat the
+contents of the stylesheet as if they were written in place of the ''@import''
+rule, with two exceptions:
+
+<ul>
+	<li>If a feature *explicitly* defines that it only applies to a particular
+	stylesheet, and not any imported ones (such as the ''@namespace'' rule),
+	then it doesn’t apply to the imported stylesheet.
+	<li> If a feature relies on the relative position of two or more constructs
+	in a stylesheet (such as the requirement that an ''@else'' rule follow
+	another conditional group rule, or the requirement that ''@charset'' must
+	not have any other content preceding it), it only applies between
+	constructs in the same stylesheet.
+</ul>
+
+Any ''@import'' rules must precede all other at-rules and style rules in a
+style sheet (besides ''@charset'', which must be the first thing in the style
+sheet if it exists), or else the ''@import'' rule is invalid.
+
+<h2 id=resolve-algorithm>
+Resolve Algorithm</h2>
+
+When ''@import'' is called, the following high-level algorithm is used to
+resolve the location of the CSS file, found within <code>url(id)</code> from
+<code>cwd</code>:
+
+1. if <code>id</code> begins with <code>/</code>
+	1. <code>cwd</code> is the filesystem root
+2. resolve <a href="#resolve_as_a_file">as a file</a> using <code>cwd/id</code> as <code>file</code>
+3. otherwise, resolve <a href="#resolve_as_a_directory">as a directory</a> using <code>cwd/id</code> as <code>dir</code>
+4. otherwise, if <code>id</code> does not begin with <code>/</code>, <code>./</code>, or <code>../</code>
+	1. resolve <a href="#resolve_as_a_module">as a module</a> using <code>cwd</code> and <code>id</code>
+5. otherwise, throw <code>"CSS Module not found"</code>
+
+<h3 id=resolve_as_a_file>
+Resolve as a File</h3>
+
+1. resolve <code>file</code> as the file
+2. otherwise, resolve <code>file.css</code> as the file
+
+<h3 id=resolve_as_a_directory>
+Resolve as a Directory</h3>
+
+1. resolve the JSON contents of <code>dir/package.json</code> as <code>pkg</code>
+	1. if <code>pkg</code> has an <code>exports.css.import</code> field
+		1. resolve <code>dir/pkg.exports.css.import</code> as the file
+	2. if <code>pkg</code> has an <code>exports.css.default</code> field
+		1. resolve <code>dir/pkg.exports.css.default</code> as the file
+	3. if <code>pkg</code> has an <code>exports.css</code> field
+		1. resolve <code>dir/pkg.exports.css</code> as the file
+	4. if <code>pkg</code> has a <code>style</code> field
+		1. resolve <code>dir/pkg.style</code> as the file
+	5. otherwise, resolve <code>dir/index.css</code> as the file
+
+<h3 id=resolve_as_a_module>
+Resolve as a Module</h3>
+
+1. for each <code>dir</code> in the <a href="#node_modules_directory">node modules directory</a> using <code>cwd</code>:
+	1. resolve <a href="#resolve_as_a_file">as a file</a> using <code>dir/id</code> as <code>file</code>
+	2. otherwise, resolve <a href="#resolve_as_a_directory">as a directory</a> using <code>dir/id</code> as <code>dir</code>
+
+<h3 id=node_modules_directory>
+Node Modules Directory</h3>
+
+1. <code>segments</code> is <code>cwd</code> split by <code>/</code>
+2. <code>count</code> is the length of <code>segments</code>
+3. <code>dirs</code> is an empty list
+4. while <code>count</code> is greater than <code>0</code>:
+	1. if <code>segments[count]</code> is not <code>node_modules</code>
+		1. push a new item to <code>dirs</code> as the <code>/</code>-joined <code>segments[0 - count]</code> and <code>node_modules</code>
+	2. <code>count</code> is <code>count</code> minus <code>1</code>
+5. return <code>dirs</code>
+
+<h2 id=implementations>
+Implementations</h2>
+
+<a href=https://github.com/rotundasoftware/parcelify>Parcelify</a> is a tool to
+add css to your npm modules consumed with browserify. It includes the
+<a>Resolve Algorithm</a> internally.
+
+<a href=https://github.com/postcss/postcss-import>PostCSS Import</a> is a
+PostCSS plugin to transform ''@import'' rules by inlining content. It includes
+the <a>Resolve Algorithm</a> internally, but diverges from the
+<a>load_as_directory</a> algorithm by using the <code>style</code> field and
+then the <code>main</code> field if possible.
+
+<a href=https://github.com/reworkcss/rework-npm>rework-npm</a> is a tool to
+import CSS styles from NPM modules using rework. It includes the
+<a>Resolve Algorithm</a> internally, but diverges by supporting
+<a href="https://github.com/isaacs/node-glob#glob-primer">glob notation</a>.

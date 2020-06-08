@@ -1,0 +1,7 @@
+{
+  "name": "css-import-resolve-spec",
+  "scripts": {
+    "start": "curl https://api.csswg.org/bikeshed/ -F file=@index.bs > index.html"
+  },
+  "private": true
+}
