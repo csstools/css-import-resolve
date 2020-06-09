@@ -1,4 +1,4 @@
-import { accessSync as fsAccessSync, readFileSync as fsReadSync, statSync as fsStatSync } from 'fs'
+import { readFileSync as fsReadSync, statSync as fsStatSync } from 'fs'
 import { join } from 'path'
 import { promises } from 'fs'
 
@@ -21,21 +21,6 @@ export function parseJson(json) {
 		return Object(JSON.parse(json))
 	} catch (error) {
 		return {}
-	}
-}
-
-/**
- * Synchronously returns whether a file is accessible to the user.
- * @arg {string} file
- * @arg {ReadFileSyncOptions} options
- * @return {boolean | void}
- */
-
-export function accessSync(file, mode) {
-	try {
-		return fsAccessSync(file, mode) || true
-	} catch (error) {
-		return false
 	}
 }
 
@@ -63,7 +48,7 @@ export function readSync(file, options) {
 
 export function statSync(file, mode) {
 	try {
-		return fsStatSync(file, mode) || null
+		return fsStatSync(file, mode)
 	} catch (error) {
 		return null
 	}

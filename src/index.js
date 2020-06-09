@@ -5,4 +5,4 @@ const resolve = {
 	sync: resolveSync
 }
 
-export { resolveAsync, resolveSync, resolve as default }
+export { resolve as default, resolveAsync, resolveSync }

@@ -1,12 +1,20 @@
-declare function resolveAsync(id: string, cwd: string, init: resolve.Options): resolve.SettledPathAsync
-
-declare function resolveSync(id: string, cwd: string, init: resolve.Options): resolve.SettledPathSync
-
 declare namespace resolve {
 	type SettledPathAsync = Promise<string | Error>
 	type SettledPathSync = string | void
 
-	interface Options {
+	/** Return the location of a file within `url(id)` from `cwd`, otherwise null. */
+	export function resolveAsync(id: string, cwd: string, init: resolve.Options): resolve.SettledPathAsync
+
+	/** Resolve the location of a file within `url(id)` from `cwd`, otherwise reject. */
+	export function resolveSync(id: string, cwd: string, init: resolve.Options): resolve.SettledPathSync
+
+	/** Return the location of a file within `url(id)` from `cwd`, otherwise null. */
+	export const async = resolveAsync
+
+	/** Resolve the location of a file within `url(id)` from `cwd`, otherwise reject. */
+	export const sync = resolveSync
+
+	export interface Options {
 		/** Base directory used by non-relative paths during resolution. */
 		baseUrl: string,
 
@@ -41,3 +49,5 @@ declare namespace resolve {
 		pathSeparator: string
 	}
 }
+
+export { resolve as default, resolveAsync, resolveSync }

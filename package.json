@@ -1,33 +1,22 @@
 {
   "name": "css-import-resolve",
-  "version": "1.0.0",
+  "version": "1.0.1",
   "description": "An algorithm for resolving imports in CSS",
   "author": "Jonathan Neal <jonathantneal@hotmail.com>",
   "license": "CC0-1.0",
   "repository": "csstools/css-import-resolve",
   "homepage": "https://github.com/csstools/css-import-resolve#readme",
   "bugs": "https://github.com/csstools/css-import-resolve/issues",
+  "type": "module",
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "exports": {
     "import": "./dist/index.mjs",
     "require": "./dist/index.cjs"
   },
-  "type": "module",
-  "types": "types.d.ts",
   "files": [
-    "dist",
-    "types.d.ts"
+    "./dist"
   ],
-  "scripts": {
-    "build": "npx rollup -c .rollup.js",
-    "build:watch": "npx rollup -c .rollup.js --watch",
-    "lint": "npx eslint --cache src",
-    "lint:fix": "npx eslint --cache --fix",
-    "pretest": "npm run build",
-    "test": "npm run lint && npm run tape",
-    "tape": "node test.cjs"
-  },
   "engines": {
     "node": ">=10.0.0"
   },
@@ -36,10 +25,24 @@
     "@babel/core": "^7.10.2",
     "@babel/preset-env": "^7.10.2",
     "babel-plugin-add-module-exports": "^1.0.2",
+    "coverage-node": "^2.0.3",
     "eslint": "^7.2.0",
-    "rollup": "^2.13.1",
-    "rollup-plugin-babel": "^4.4.0"
+    "esm": "^3.2.25",
+    "rollup": "^2.15.0",
+    "rollup-plugin-babel": "^4.4.0",
+    "rollup-plugin-copy": "^3.3.0"
   },
+  "keywords": [
+    "css",
+    "spec",
+    "imports",
+    "resolve",
+    "algorithm",
+    "external",
+    "files",
+    "style",
+    "sheets"
+  ],
   "babel": {
     "presets": [
       [
@@ -60,6 +63,9 @@
       "sourceType": "module"
     }
   },
+  "esm": {
+    "mode": "all"
+  },
   "prettier": {
     "arrowParens": "avoid",
     "endOfLine": "lf",
@@ -79,7 +85,24 @@
   "rollup": {
     "input": "src/index.js",
     "plugins": [
-      "rollup-plugin-babel"
+      "rollup-plugin-babel",
+      [
+        "rollup-plugin-copy",
+        {
+          "targets": [
+            {
+              "src": "./src/index.d.ts",
+              "dest": "./dist",
+              "rename": "index.cjs.d.ts"
+            },
+            {
+              "src": "./src/index.d.ts",
+              "dest": "./dist",
+              "rename": "index.mjs.d.ts"
+            }
+          ]
+        }
+      ]
     ],
     "output": [
       {
@@ -94,15 +117,14 @@
       }
     ]
   },
-  "keywords": [
-    "css",
-    "spec",
-    "imports",
-    "resolve",
-    "algorithm",
-    "external",
-    "files",
-    "style",
-    "sheets"
-  ]
+  "scripts": {
+    "build": "rollup -c .rollup.js",
+    "build:watch": "rollup -c .rollup.js --watch",
+    "coverage": "coverage-node test/index.js",
+    "coverage:node10": "coverage-node -r esm test/index.js",
+    "lint": "eslint --cache src",
+    "lint:fix": "eslint --cache --fix",
+    "pretest": "npm run build",
+    "test": "npm run lint && npm run coverage"
+  }
 }

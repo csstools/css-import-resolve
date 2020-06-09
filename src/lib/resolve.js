@@ -47,22 +47,18 @@ export function resolveAsync(id, cwd, init) {
 			// otherwise, resolve as a directory using `cwd/id` as `dir`
 			.catch(() => resolveAsDirectoryAsync(join(cwd, id), opts))
 			.catch(() => {
-				// otherwise, if `id` does not begin with `/`, `./`, or `../`; then,
+				// otherwise, if `id` does not begin with `/`, `./`, or `../`
 				if (!startsWithRelative(id, opts)) {
-					// if `baseUrl` is not `cwd`
 					if (opts.baseUrl !== cwd) {
-						// resolve as a file using `baseUrl/id` as `file`
-						return (
-							resolveAsFileAsync(join(opts.baseUrl, id), opts)
-								// otherwise, resolve as a directory using `baseUrl/id` as `dir`
-								.catch(() => resolveAsDirectoryAsync(join(cwd, id), opts))
+						return resolveAsFileAsync(join(opts.baseUrl, id), opts).catch(() =>
+							resolveAsDirectoryAsync(join(opts.baseUrl, id), opts)
 						)
 					}
 
-					// resolve as a module using `cwd` and `id`
 					return resolveAsModuleAsync(cwd, id, opts)
 				}
 
+				// otherwise, return null
 				return Promise.reject()
 			})
 			.catch(
