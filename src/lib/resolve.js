@@ -46,14 +46,25 @@ export function resolveAsync(id, cwd, init) {
 		resolveAsFileAsync(join(cwd, id), opts)
 			// otherwise, resolve as a directory using `cwd/id` as `dir`
 			.catch(() => resolveAsDirectoryAsync(join(cwd, id), opts))
-			.catch(() =>
-				// otherwise, if `id` does not begin with `/`, `./`, or `../` then resolve as a module using `cwd` and `id`
-				!startsWithRelative(id, opts)
-					? opts.baseUrl !== cwd
-						? resolveAsFileAsync(join(opts.baseUrl, id), opts)
-						: resolveAsModuleAsync(cwd, id, opts)
-					: Promise.reject()
-			)
+			.catch(() => {
+				// otherwise, if `id` does not begin with `/`, `./`, or `../`; then,
+				if (!startsWithRelative(id, opts)) {
+					// if `baseUrl` is not `cwd`
+					if (opts.baseUrl !== cwd) {
+						// resolve as a file using `baseUrl/id` as `file`
+						return (
+							resolveAsFileAsync(join(opts.baseUrl, id), opts)
+								// otherwise, resolve as a directory using `baseUrl/id` as `dir`
+								.catch(() => resolveAsDirectoryAsync(join(cwd, id), opts))
+						)
+					}
+
+					// resolve as a module using `cwd` and `id`
+					return resolveAsModuleAsync(cwd, id, opts)
+				}
+
+				return Promise.reject()
+			})
 			.catch(
 				// otherwise, throw `"CSS Module not found"`
 				() => Promise.reject(new Error('CSS Module not found'))
@@ -96,10 +107,10 @@ export function resolveSync(id, cwd, init) {
 		resolveAsFileSync(join(cwd, id), opts) ||
 		// otherwise, return as a directory using `cwd/id` as `dir`
 		resolveAsDirectorySync(join(cwd, id), opts) ||
-		// otherwise, if `id` does not begin with `/`, `./`, or `../` then return as a module using `cwd` and `id`
+		// otherwise, if `id` does not begin with `/`, `./`, or `../`
 		(!startsWithRelative(id, opts)
 			? opts.baseUrl !== cwd
-				? resolveAsFileSync(join(opts.baseUrl, id), opts)
+				? resolveAsFileSync(join(opts.baseUrl, id), opts) || resolveAsDirectorySync(join(opts.baseUrl, id), opts)
 				: resolveAsModuleSync(cwd, id, opts)
 			: null) ||
 		// otherwise, return null
